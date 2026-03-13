@@ -1,17 +1,17 @@
 from fastapi import APIRouter
-from backend.services.complaint_service import process_complaints
+import pandas as pd
 
 router = APIRouter()
 
-DATA_PATH = "backend/data/nagaraiq_complaints.csv"
+DATA_PATH = "backend/data/classified_complaints.csv"
 
 
 @router.get("/complaints")
 def get_complaints():
 
-    df = process_complaints(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
 
-    # Replace NaN / Inf values so JSON serialization works
+    # clean NaN values
     df = df.replace([float("inf"), float("-inf")], None)
     df = df.fillna("")
 
