@@ -1,20 +1,23 @@
-import React, { useEffect } from "react";
-import axios from "axios";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
+import ComplaintPage from "./pages/ComplaintPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
-const App: React.FC = () => {
-
-  useEffect(() => {
-    axios
-      .get("http://127.0.0.1:8000/health")
-      .then((res) => console.log(res.data))
-      .catch((err) => console.error(err));
-  }, []);
-
+const App: React.FC = (): React.JSX.Element => {
   return (
-    <div style={{ padding: "30px" }}>
-      <h1>NagaraIQ Civic Intelligence Dashboard</h1>
-      <p>Connecting to backend...</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="complaint" element={<ComplaintPage />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 };
 
