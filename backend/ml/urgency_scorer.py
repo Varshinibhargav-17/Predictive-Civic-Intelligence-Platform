@@ -14,18 +14,25 @@ SEVERITY_KEYWORDS = [
 ]
 
 
-def compute_urgency(text):
+def score_urgency(text: str) -> int:
+    """
+    Compute urgency score for a complaint based on text severity.
+
+    Returns an urgency score between 0 and 100.
+    """
 
     score = 0
 
+    text = text.lower()
+
     # severity keyword check
     for word in SEVERITY_KEYWORDS:
-        if re.search(word, text.lower()):
+        if re.search(word, text):
             score += 35
             break
 
-    # simple baseline score
+    # baseline urgency
     score += 30
 
-    # limit score to 100
+    # cap score
     return min(score, 100)

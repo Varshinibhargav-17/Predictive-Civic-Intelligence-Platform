@@ -40,50 +40,44 @@ const ForecastChart: React.FC = () => {
         const response = await getForecast();
         setData(response.data);
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching forecast:", err);
-        setError("Failed to load forecast data.");
-        // Mock data if backend is down
-        const mock: ForecastData[] = [];
-        const today = new Date();
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(today);
-          d.setDate(today.getDate() + i);
-          
-          mock.push({
-            ds: d.toISOString().split("T")[0],
-            yhat: Math.max(5, Math.floor(Math.random() * 25) + 10)
-          });
-        }
-        setData(mock);
+        setError(err.message || "Failed to fetch forecast");
       } finally {
         setLoading(false);
       }
     };
-
     fetchForecast();
   }, []);
 
-  if (loading) return <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>Loading forecast...</div>;
+  if (loading) {
+    return (
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "var(--text-secondary)" }}>
+        <div className="spinner" />
+        <span style={{ fontSize: "0.875rem" }}>Loading forecast...</span>
+      </div>
+    );
+  }
 
   const chartData = {
-    labels: data.map(d => {
+    labels: data.map((d) => {
       const date = new Date(d.ds);
-      return `${date.getMonth() + 1}/${date.getDate()}`;
+      return date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric" });
     }),
     datasets: [
       {
         label: "Predicted Complaints",
-        data: data.map(d => d.yhat),
-        borderColor: "rgb(59, 130, 246)", // var(--primary)
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        borderWidth: 2,
-        pointBackgroundColor: "rgb(59, 130, 246)",
-        pointBorderColor: "#fff",
-        pointHoverBackgroundColor: "#fff",
-        pointHoverBorderColor: "rgb(59, 130, 246)",
+        data: data.map((d) => d.yhat),
+        borderColor: "rgb(99, 102, 241)",
+        backgroundColor: "rgba(99, 102, 241, 0.08)",
+        borderWidth: 2.5,
+        pointBackgroundColor: "rgb(99, 102, 241)",
+        pointBorderColor: "rgba(13, 18, 32, 0.9)",
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
         fill: true,
-        tension: 0.4 // Smooth curve
+        tension: 0.45,
       }
     ]
   };
@@ -92,42 +86,38 @@ const ForecastChart: React.FC = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
       tooltip: {
-        backgroundColor: "rgba(15, 23, 42, 0.9)", // var(--text-primary)
-        titleFont: { family: "'Inter', sans-serif", size: 13 },
+        backgroundColor: "rgba(17, 24, 39, 0.96)",
+        titleFont: { family: "'Inter', sans-serif", size: 12, weight: "500" as const },
         bodyFont: { family: "'Inter', sans-serif", size: 14, weight: "bold" as const },
-        padding: 10,
-        cornerRadius: 8,
+        padding: 12,
+        cornerRadius: 10,
         displayColors: false,
+        borderColor: "rgba(255,255,255,0.08)",
+        borderWidth: 1,
         callbacks: {
-          label: function(context: { parsed: { y: number } }) {
-            return `Predicted: ${context.parsed.y.toFixed(1)}`;
-          }
+          title: (context: { label: string }[]) => context[0].label,
+          label: (context: { parsed: { y: number } }) => `${context.parsed.y.toFixed(0)} complaints predicted`,
         }
       }
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-          drawBorder: false
-        },
+        grid: { display: false },
+        border: { display: false },
         ticks: {
-          font: { family: "'Inter', sans-serif", size: 11 },
-          color: "#94a3b8" // var(--text-tertiary)
+          font: { family: "'Inter', sans-serif", size: 10 },
+          color: "#475569",
         }
       },
       y: {
-        grid: {
-          color: "#f1f5f9", // var(--bg-surface-hover)
-          drawBorder: false
-        },
+        grid: { color: "rgba(255, 255, 255, 0.04)", drawBorder: false },
+        border: { display: false, dash: [4, 4] },
         ticks: {
-          font: { family: "'Inter', sans-serif", size: 11 },
-          color: "#94a3b8" // var(--text-tertiary)
+          font: { family: "'Inter', sans-serif", size: 10 },
+          color: "#475569",
+          stepSize: 5,
         },
         beginAtZero: true
       }
@@ -139,11 +129,27 @@ const ForecastChart: React.FC = () => {
   };
 
   return (
-    <div style={{ height: "100%", width: "100%", padding: "0.5rem" }}>
-      {error && <div style={{ fontSize: "0.75rem", color: "var(--danger)", marginBottom: "0.5rem", textAlign: "center" }}>Preview Mode (Backend Disconnected)</div>}
-      <div style={{ position: "relative", height: error ? "calc(100% - 24px)" : "100%" }}>
-        <Line data={chartData} options={options} />
-      </div>
+    <div style={{ height: "100%", width: "100%", position: "relative" }}>
+      {error && (
+        <div
+          style={{
+            position: "absolute",
+            top: "0",
+            left: "0",
+            fontSize: "0.65rem",
+            color: "var(--warning)",
+            fontWeight: "600",
+            background: "rgba(251,191,36,0.08)",
+            padding: "0.15rem 0.5rem",
+            borderRadius: "4px",
+            border: "1px solid rgba(251,191,36,0.15)",
+            zIndex: 1,
+          }}
+        >
+          ⚡ Demo
+        </div>
+      )}
+      <Line data={chartData} options={options} />
     </div>
   );
 };

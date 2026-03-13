@@ -20,65 +20,120 @@ const BiasTable: React.FC = () => {
         setError(null);
       } catch (err) {
         console.error("Error fetching bias data:", err);
-        setError("Failed to load civic bias data. Is the backend running?");
-        // Use dummy data for display purposes if backend is down
+        setError("Backend offline — showing demo data");
         setData([
-          { ward_name: "BTM Layout", avg_resolution_days: 53.5, bias_score: 64.2 },
-          { ward_name: "Koramangala", avg_resolution_days: 12.1, bias_score: -5.4 },
-          { ward_name: "Marathahalli", avg_resolution_days: 41.2, bias_score: 22.1 },
-          { ward_name: "Whitefield", avg_resolution_days: 18.5, bias_score: 5.2 },
-          { ward_name: "Indiranagar", avg_resolution_days: 10.2, bias_score: -12.5 },
+          { ward_name: "Rajajinagar", avg_resolution_days: 41.7, bias_score: 78 },
+          { ward_name: "BTM Layout", avg_resolution_days: 21.3, bias_score: 64 },
+          { ward_name: "Marathahalli", avg_resolution_days: 14.5, bias_score: 52 },
+          { ward_name: "Whitefield", avg_resolution_days: 5.2, bias_score: 24 },
+          { ward_name: "Koramangala", avg_resolution_days: 3.2, bias_score: 8 },
         ]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  if (loading) return <div style={{ padding: "1rem", textAlign: "center", color: "var(--text-secondary)" }}>Loading bias data...</div>;
+  if (loading) {
+    return (
+      <div style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="skeleton" style={{ height: "40px", borderRadius: "8px" }} />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: "100%", overflowX: "auto" }}>
-      {error && <div style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", padding: "0.5rem 1rem", borderRadius: "var(--radius-md)", marginBottom: "1rem", fontSize: "0.875rem" }}>{error} (Showing mock data)</div>}
-      <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+    <div style={{ width: "100%" }}>
+      {error && (
+        <div
+          style={{
+            padding: "0.5rem 1rem",
+            background: "rgba(251,191,36,0.08)",
+            borderBottom: "1px solid rgba(251,191,36,0.15)",
+            fontSize: "0.75rem",
+            color: "var(--warning)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.375rem",
+          }}
+        >
+          ⚠ {error}
+        </div>
+      )}
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ borderBottom: "1px solid var(--border-color)", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-            <th style={{ padding: "0.75rem 1rem", fontWeight: "600" }}>Ward Name</th>
-            <th style={{ padding: "0.75rem 1rem", fontWeight: "600" }}>Avg Days to Resolve</th>
-            <th style={{ padding: "0.75rem 1rem", fontWeight: "600" }}>Bias Score</th>
-            <th style={{ padding: "0.75rem 1rem", fontWeight: "600" }}>Status</th>
+          <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
+            {["Ward", "Avg Days", "Bias", "Level"].map((h) => (
+              <th
+                key={h}
+                style={{
+                  padding: "0.625rem 1rem",
+                  fontSize: "0.7rem",
+                  fontWeight: "600",
+                  color: "var(--text-tertiary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  textAlign: "left",
+                  background: "var(--bg-elevated)",
+                }}
+              >
+                {h}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {data.map((row: BiasData, index: number) => {
-            let scoreColor = "var(--success)";
-            let statusBadge = { bg: "var(--success-light)", text: "var(--success)", label: "Low Bias" };
-            
-            if (row.bias_score > 50) {
-              scoreColor = "var(--danger)";
-              statusBadge = { bg: "var(--danger-light)", text: "var(--danger)", label: "High Bias" };
-            } else if (row.bias_score >= 0) {
-              scoreColor = "var(--warning)";
-              statusBadge = { bg: "var(--warning-light)", text: "var(--warning-hover)", label: "Moderate" };
-            }
+            const biasColor =
+              row.bias_score >= 60 ? "#f87171"
+                : row.bias_score >= 30 ? "#fbbf24"
+                  : "#34d399";
+            const biasLabel =
+              row.bias_score >= 60 ? "High"
+                : row.bias_score >= 30 ? "Moderate"
+                  : "Low";
 
             return (
-              <tr key={index} style={{ borderBottom: index < data.length - 1 ? "1px solid var(--border-color)" : "none" }}>
-                <td style={{ padding: "1rem", fontWeight: "500", color: "var(--text-primary)" }}>{row.ward_name}</td>
-                <td style={{ padding: "1rem", color: "var(--text-secondary)" }}>{row.avg_resolution_days.toFixed(1)} days</td>
-                <td style={{ padding: "1rem", fontWeight: "bold", color: scoreColor }}>{row.bias_score.toFixed(1)}</td>
-                <td style={{ padding: "1rem" }}>
-                  <span style={{ 
-                    backgroundColor: statusBadge.bg, 
-                    color: statusBadge.text, 
-                    padding: "0.25rem 0.75rem", 
-                    borderRadius: "9999px", 
-                    fontSize: "0.75rem", 
-                    fontWeight: "600" 
-                  }}>
-                    {statusBadge.label}
+              <tr
+                key={index}
+                style={{
+                  borderBottom: index < data.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <td style={{ padding: "0.75rem 1rem", fontWeight: "600", fontSize: "0.875rem", color: "var(--text-primary)" }}>
+                  {row.ward_name}
+                </td>
+                <td style={{ padding: "0.75rem 1rem", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+                  {row.avg_resolution_days.toFixed(1)}d
+                </td>
+                <td style={{ padding: "0.75rem 1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <div style={{ width: "32px", height: "3px", background: "var(--bg-elevated)", borderRadius: "9999px", overflow: "hidden" }}>
+                      <div style={{ width: `${Math.min(100, Math.abs(row.bias_score))}%`, height: "100%", background: biasColor }} />
+                    </div>
+                    <span style={{ fontWeight: "700", color: biasColor, fontSize: "0.875rem", fontFamily: "var(--font-display)" }}>
+                      {row.bias_score.toFixed(0)}
+                    </span>
+                  </div>
+                </td>
+                <td style={{ padding: "0.75rem 1rem" }}>
+                  <span
+                    style={{
+                      background: `${biasColor}15`,
+                      color: biasColor,
+                      padding: "0.2rem 0.6rem",
+                      borderRadius: "9999px",
+                      fontSize: "0.7rem",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {biasLabel}
                   </span>
                 </td>
               </tr>

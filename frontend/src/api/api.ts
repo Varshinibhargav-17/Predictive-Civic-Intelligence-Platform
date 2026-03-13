@@ -6,10 +6,10 @@ All backend requests will go through this file.
 */
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000",
-  headers: {
-    "Content-Type": "application/json",
-  },
+   baseURL: "http://127.0.0.1:8000",
+   headers: {
+      "Content-Type": "application/json",
+   },
 });
 
 /* ------------------------------
@@ -17,6 +17,7 @@ const API = axios.create({
 ------------------------------ */
 
 export const getComplaints = () => API.get("/complaints");
+export const createComplaint = (data: any) => API.post("/complaints", data);
 
 
 /* ------------------------------
@@ -45,14 +46,14 @@ export const getForecast = () => API.get("/forecast");
 ------------------------------ */
 
 export const classifyImage = (file: File) => {
-  const formData = new FormData();
-  formData.append("file", file);
+   const formData = new FormData();
+   formData.append("file", file);
 
-  return API.post("/classify-image", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+   return API.post("/classify-image", formData, {
+      headers: {
+         "Content-Type": "multipart/form-data",
+      },
+   });
 };
 
 

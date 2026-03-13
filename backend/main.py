@@ -6,9 +6,11 @@ from backend.routers import bias
 from backend.routers import hotspots
 from backend.routers import forecast
 from backend.routers import image
-from backend.routers import users   # ← ADDED
+from backend.routers import users
+
 
 app = FastAPI(title="NagaraIQ Civic Intelligence API")
+
 
 # -----------------------------
 # Enable CORS for frontend
@@ -20,6 +22,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # -----------------------------
 # Startup event
@@ -54,9 +57,9 @@ def health():
 # -----------------------------
 # Include routers
 # -----------------------------
-app.include_router(complaints.router)
-app.include_router(bias.router)
-app.include_router(hotspots.router)
-app.include_router(forecast.router)
-app.include_router(image.router)
-app.include_router(users.router)   # ← ADDED
+app.include_router(complaints.router, prefix="/api", tags=["Complaints"])
+app.include_router(bias.router, prefix="/api", tags=["Bias Detection"])
+app.include_router(hotspots.router, prefix="/api", tags=["Hotspots"])
+app.include_router(forecast.router, prefix="/api", tags=["Forecast"])
+app.include_router(image.router, prefix="/api", tags=["Image Classification"])
+app.include_router(users.router, prefix="/api", tags=["Users"])
