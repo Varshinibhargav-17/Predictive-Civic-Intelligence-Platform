@@ -14,7 +14,7 @@ SEVERITY_KEYWORDS = [
 ]
 
 
-def score_urgency(text: str) -> int:
+def score_urgency(text: str, category: str = "Other") -> int:
     """
     Compute urgency score for a complaint based on text severity.
 
@@ -31,8 +31,19 @@ def score_urgency(text: str) -> int:
             score += 35
             break
 
-    # baseline urgency
-    score += 30
+    # baseline urgency based on category
+    if category == "Road & Potholes":
+        score += 55
+    elif category == "Electricity":
+        score += 75
+    elif category in ["Drainage", "Sanitation & Garbage"]:
+        score += 65
+    elif category == "Water Supply":
+        score += 60
+    elif category == "Encroachment":
+        score += 45
+    else:
+        score += 30
 
     # cap score
     return min(score, 100)

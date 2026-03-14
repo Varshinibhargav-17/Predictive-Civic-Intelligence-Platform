@@ -4,3 +4,4 @@ class BiasResult(BaseModel):
     ward_name: str
     avg_resolution_days: float
     bias_score: float
+    total_complaints: int = 0

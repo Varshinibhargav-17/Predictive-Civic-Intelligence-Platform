@@ -5,7 +5,6 @@ from backend.schemas.image_schema import ImageClassificationResult
 from backend.services.image_service import process_image_upload
 
 router = APIRouter(
-    prefix="",
     tags=["Image Classification"]
 )
 
@@ -32,11 +31,9 @@ async def classify_complaint_image(
     )
 ):
     """
-    POST /classify-image
-
-    Accepts a multipart image upload.
-    Returns predicted civic complaint category and confidence score.
+    POST /api/classify-image
     """
+
     result = await process_image_upload(file)
 
     return ImageClassificationResult(

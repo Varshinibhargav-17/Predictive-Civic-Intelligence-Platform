@@ -28,6 +28,7 @@ export const getForecast = () => API.get("/api/forecast");
 export const classifyImage = (file: File) => {
    const formData = new FormData();
    formData.append("file", file);
+
    return API.post("/api/classify-image", formData, {
       headers: { "Content-Type": "multipart/form-data" },
    });

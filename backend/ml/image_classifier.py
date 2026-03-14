@@ -58,8 +58,10 @@ CIVIC_CHECK_PROMPTS = [
 PROMPT_TO_CATEGORY = {
 
     "a photo of a pothole on an urban road": "Road & Potholes",
+    "a photo of a damaged road surface with cracks or potholes": "Road & Potholes",
     "a photo of garbage overflowing on a city street": "Sanitation & Garbage",
-    "a photo of a broken streetlight pole": "Streetlight",
+    "a photo of a broken or non-functional streetlight pole": "Streetlight",
+    "a photo of a damaged streetlight": "Streetlight",
     "a photo of water leaking from a pipe on a road": "Water Supply",
     "a photo of sewage or drainage overflowing onto the road": "Drainage",
     "a photo of a damaged road divider or traffic median": "Road & Potholes",
@@ -69,6 +71,8 @@ PROMPT_TO_CATEGORY = {
     "a photo of stagnant dirty water on a street": "Sanitation & Garbage",
     "a photo of an open manhole without a cover": "Drainage",
     "a photo of an overflowing garbage bin on a street": "Sanitation & Garbage",
+    "a photo of damaged electrical wires or transformers": "Electricity",
+    "a photo of a broken power line or electrical infrastructure": "Electricity",
 
     # negative prompts
     "a selfie of a person": "Irrelevant",
@@ -85,9 +89,11 @@ PROMPTS = list(PROMPT_TO_CATEGORY.keys())
 # SAFETY PARAMETERS
 # ─────────────────────────────────────────────────────────────
 
-CIVIC_THRESHOLD = 0.60
-CONFIDENCE_THRESHOLD = 0.55
-SIMILARITY_GAP_THRESHOLD = 0.10
+# Lowered thresholds so real civic images pass classification
+# (original values were too strict: 0.60 / 0.55 / 0.10)
+CIVIC_THRESHOLD = 0.35
+CONFIDENCE_THRESHOLD = 0.30
+SIMILARITY_GAP_THRESHOLD = 0.04
 
 
 # ─────────────────────────────────────────────────────────────

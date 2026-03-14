@@ -31,7 +31,6 @@ const TriagePage: React.FC = () => {
     useEffect(() => {
         const fetchComplaints = async () => {
             try {
-                setLoading(true);
                 const response = await fetch("http://localhost:8000/api/complaints");
                 const data = await response.json();
                 setComplaints(data);
@@ -44,7 +43,24 @@ const TriagePage: React.FC = () => {
         };
 
         fetchComplaints();
+        // Auto-refresh every 20 seconds so triage stays in sync
+        const interval = setInterval(fetchComplaints, 20000);
+        return () => clearInterval(interval);
     }, []);
+
+    const handleUpdateStatus = async (id: number, newStatus: string) => {
+        try {
+            const res = await fetch(
+                `http://localhost:8000/api/complaints/${id}?status=${encodeURIComponent(newStatus)}`,
+                { method: "PUT" }
+            );
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+            const updated = complaints.map((c: any) => (c.id === id ? { ...c, status: newStatus } : c));
+            setComplaints(updated);
+        } catch (err) {
+            console.error("Failed to update status", err);
+        }
+    };
 
     const processedComplaints = complaints.map((c) => ({
         id: c.id || c.complaint_id,
@@ -53,8 +69,8 @@ const TriagePage: React.FC = () => {
         category: c.predicted_category || c.category || "Other",
         urgency: c.ai_urgency_score || c.urgency || 0,
         ward: c.ward_name || c.ward || "N/A",
-        status: "open",
-        filed: c.filed_date || new Date().toISOString(),
+        status: c.status || "open",
+        filed: c.filed_date || "",
         department: "BBMP",
         officer: c.officer_id || null,
         severity_keywords: [],
@@ -150,8 +166,8 @@ const TriagePage: React.FC = () => {
                 {/* Filter Chips */}
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                     {[
-                        { label: "🔴 Critical (80+)", count: complaints.filter(c => c.urgency >= 80).length },
-                        { label: "⚡ Open", count: complaints.filter(c => c.status === "open").length },
+                        { label: "🔴 Critical (80+)", count: processedComplaints.filter(c => c.urgency >= 80).length },
+                        { label: "⚡ Open", count: processedComplaints.filter(c => c.status === "open").length },
                     ].map((chip, i) => (
                         <span
                             key={i}
@@ -262,8 +278,8 @@ const TriagePage: React.FC = () => {
                                                 {c.officer || "Unassigned"}
                                             </td>
                                             <td style={{ fontSize: "0.75rem", color: "var(--text-tertiary)", whiteSpace: "nowrap" }}>
-                                                {c.filed.split(" ")[1]}
-                                                <div>{c.filed.split(" ")[0]}</div>
+                                                {c.filed ? new Date(c.filed).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
+                                                <div>{c.filed ? new Date(c.filed).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</div>
                                             </td>
                                         </tr>
                                     );
@@ -385,8 +401,8 @@ const TriagePage: React.FC = () => {
                                 gap: "0.625rem",
                             }}
                         >
-                            <button className="btn btn-success btn-sm" style={{ flex: 1, justifyContent: "center" }}>✓ Mark Resolved</button>
-                            <button className="btn btn-secondary btn-sm" style={{ flex: 1, justifyContent: "center" }}>⟳ In Progress</button>
+                            <button onClick={() => handleUpdateStatus(selected.id, "resolved")} className="btn btn-success btn-sm" style={{ flex: 1, justifyContent: "center" }}>✓ Mark Resolved</button>
+                            <button onClick={() => handleUpdateStatus(selected.id, "in_progress")} className="btn btn-secondary btn-sm" style={{ flex: 1, justifyContent: "center" }}>⟳ In Progress</button>
                         </div>
                     </div>
                 )}

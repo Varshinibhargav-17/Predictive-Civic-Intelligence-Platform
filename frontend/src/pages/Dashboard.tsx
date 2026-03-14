@@ -9,7 +9,7 @@ interface DashboardProps {
   activeView: "authority" | "public";
 }
 
-/* ─── PublicHighlights ── Fetches real bias data, no static values ─────── */
+/* ─── PublicHighlights ── Fetches real bias data, personalized per top ward ─ */
 const PublicHighlights: React.FC = () => {
   const [biasRows, setBiasRows] = useState<any[]>([]);
   const [topWard, setTopWard] = useState<any | null>(null);
@@ -17,15 +17,25 @@ const PublicHighlights: React.FC = () => {
 
   useEffect(() => {
     Promise.all([getBiasData(), getBiasSummary()])
-      .then(([biasRes, summaryRes]) => {
+      .then(([biasRes]) => {
         const rows = biasRes.data as any[];
         setBiasRows(rows.slice(0, 4));
         setTopWard(rows[0] ?? null);
-        void summaryRes; // summary available if needed later
       })
       .catch(() => { setBiasRows([]); setTopWard(null); })
       .finally(() => setLoading(false));
   }, []);
+
+  // Build personalised brief sentences from real numbers
+  const buildBrief = (ward: any, allRows: any[]) => {
+    if (!ward || allRows.length === 0) return null;
+    const cityAvgDays = Math.round(allRows.reduce((s: number, w: any) => s + (w.avg_resolution_days || 0), 0) / allRows.length);
+    const cityAvgComplaints = Math.round(allRows.reduce((s: number, w: any) => s + (w.total_complaints || 0), 0) / allRows.length);
+    const slower = ward.avg_resolution_days - cityAvgDays;
+    const rank = 1; // topWard is always rank 1
+    const biasLevel = ward.bias_score >= 70 ? "critically high" : ward.bias_score >= 40 ? "elevated" : "moderate";
+    return { cityAvgDays, cityAvgComplaints, slower, rank, biasLevel };
+  };
 
   if (loading) {
     return (
@@ -45,9 +55,11 @@ const PublicHighlights: React.FC = () => {
     );
   }
 
+  const brief = topWard ? buildBrief(topWard, biasRows) : null;
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-      {/* Bias Activity Radar — driven by real /api/bias data */}
+      {/* Bias Activity Radar */}
       <div style={{ background: "linear-gradient(135deg, rgba(248,113,113,0.06), rgba(236,72,153,0.04))", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
         <div className="section-title" style={{ marginBottom: "1.25rem" }}>
           <div className="icon" style={{ background: "rgba(248,113,113,0.15)", fontSize: "0.875rem" }}>⚠</div>
@@ -57,14 +69,17 @@ const PublicHighlights: React.FC = () => {
           {biasRows.map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem", background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.1)", borderRadius: "var(--radius-md)" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: "600", fontSize: "0.9rem", marginBottom: "0.4rem" }}>{item.ward_name}</div>
+                <div style={{ fontWeight: "600", fontSize: "0.875rem", marginBottom: "0.4rem", display: "flex", justifyContent: "space-between" }}>
+                  <span>{item.ward_name}</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", fontWeight: "400" }}>{item.avg_resolution_days}d avg</span>
+                </div>
                 <div style={{ height: "4px", background: "rgba(248,113,113,0.15)", borderRadius: "9999px", overflow: "hidden" }}>
-                  <div style={{ width: `${item.bias_score}%`, height: "100%", background: "#f87171", borderRadius: "9999px" }} />
+                  <div style={{ width: `${item.bias_score}%`, height: "100%", background: item.bias_score >= 70 ? "#f87171" : item.bias_score >= 40 ? "#fbbf24" : "#34d399", borderRadius: "9999px", transition: "width 0.6s ease" }} />
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#f87171", fontFamily: "var(--font-display)" }}>{item.bias_score}/100</div>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-tertiary)" }}>{item.total_complaints ?? 0} complaints</div>
+                <div style={{ fontSize: "1rem", fontWeight: "700", color: item.bias_score >= 70 ? "#f87171" : item.bias_score >= 40 ? "#fbbf24" : "#34d399", fontFamily: "var(--font-display)" }}>{item.bias_score}/100</div>
+                <div style={{ fontSize: "0.68rem", color: "var(--text-tertiary)" }}>{item.total_complaints ?? 0} complaints</div>
               </div>
             </div>
           ))}
@@ -72,27 +87,40 @@ const PublicHighlights: React.FC = () => {
         <Link to="/investigate" className="btn btn-danger btn-sm" style={{ marginTop: "1rem", width: "100%", justifyContent: "center" }}>Investigate →</Link>
       </div>
 
-      {/* Top Ward Brief — driven by real top bias ward */}
+      {/* Auto Investigation Brief — personalised per top ward */}
       <div style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04))", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "var(--radius-lg)", padding: "1.5rem", display: "flex", flexDirection: "column" }}>
         <div className="section-title" style={{ marginBottom: "1.25rem" }}>
           <div className="icon" style={{ background: "rgba(99,102,241,0.15)", fontSize: "0.875rem" }}>🔍</div>
           Auto Investigation Brief
         </div>
-        {topWard && (
-          <div style={{ background: "var(--bg-elevated)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "var(--radius-md)", padding: "1.25rem", flex: 1, fontSize: "0.875rem", lineHeight: 1.7, color: "var(--text-secondary)" }}>
-            <div style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        {topWard && brief && (
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "var(--radius-md)", padding: "1.25rem", flex: 1, fontSize: "0.875rem", lineHeight: 1.75, color: "var(--text-secondary)" }}>
+            <div style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
               <span style={{ fontWeight: "700", color: "#818cf8", fontSize: "0.9rem" }}>{topWard.ward_name}</span>
               <span style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", fontSize: "0.65rem", padding: "0.1rem 0.5rem", borderRadius: "var(--radius-full)", fontWeight: "700" }}>
                 BIAS SCORE: {topWard.bias_score}/100
               </span>
+              <span style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8", fontSize: "0.65rem", padding: "0.1rem 0.5rem", borderRadius: "var(--radius-full)", fontWeight: "600" }}>
+                {brief.biasLevel.toUpperCase()}
+              </span>
             </div>
-            <p style={{ marginBottom: "0.75rem" }}>
-              Analysis of <strong style={{ color: "var(--text-primary)" }}>{topWard.total_complaints ?? 0} complaints</strong> shows the highest bias score in the city —
-              avg resolution of <strong style={{ color: "#f87171" }}>{topWard.avg_resolution_days} days</strong> vs city average.
+            <p style={{ marginBottom: "0.625rem" }}>
+              <strong style={{ color: "var(--text-primary)" }}>{topWard.ward_name}</strong> leads all wards
+              with a bias score of <strong style={{ color: "#f87171" }}>{topWard.bias_score}/100</strong> —
+              {brief.biasLevel === "critically high" ? " placing it in the critical risk tier requiring immediate investigation."
+                : " indicating systemic resolution delays that warrant field verification."}
             </p>
-            <p>
-              This ward has been flagged for elevated urgency scores relative to all other wards.
-              A field investigation is recommended to verify resolution quality.
+            <p style={{ marginBottom: "0.625rem" }}>
+              Average resolution time is <strong style={{ color: "#f87171" }}>{topWard.avg_resolution_days} days</strong>
+              {brief.slower > 0
+                ? <> — <strong>{brief.slower} days longer</strong> than the city average of {brief.cityAvgDays} days.</>
+                : <> — near the city average of {brief.cityAvgDays} days, but closure quality is suspect.</>}
+            </p>
+            <p style={{ marginBottom: 0 }}>
+              {topWard.total_complaints} complaint{topWard.total_complaints !== 1 ? "s" : ""} logged
+              {topWard.total_complaints > brief.cityAvgComplaints
+                ? <> ({topWard.total_complaints - brief.cityAvgComplaints} above city avg of {brief.cityAvgComplaints}) — high complaint density suggests recurring infrastructure failure.</>
+                : <> (city avg: {brief.cityAvgComplaints}). Despite lower volume, bias score indicates possible complaint suppression.</>}
             </p>
           </div>
         )}
@@ -127,13 +155,15 @@ const getUrgencyColor = (score: number) => {
 // ─── Component ───────────────────────────────────────────────────────────────
 const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [complaints, setComplaints] = useState<any[]>([]);
+  const [complaints, setComplaints] = useState<any[]>([]);       // all complaints — for stats
   const [loading, setLoading] = useState(true);
 
-  // Derived stats from complaint data
-  const openComplaints  = complaints.filter((c) => c.status === "open").length;
-  const highUrgency     = complaints.filter((c) => (c.ai_urgency_score ?? c.urgency_score ?? 0) >= 7).length;
-  const uniqueWards     = new Set(complaints.map((c) => c.ward_name).filter(Boolean)).size;
+  // Derived stats from ALL complaint data (not sliced)
+  const openComplaints = complaints.filter((c) => c.status === "open").length;
+  const highUrgency    = complaints.filter((c) => (c.ai_urgency_score ?? c.urgency_score ?? 0) >= 7).length;
+  const uniqueWards    = new Set(complaints.map((c) => c.ward_name).filter(Boolean)).size;
+  // Recent 5 for the table
+  const recentComplaints = complaints.slice(0, 5);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -146,7 +176,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
         setLoading(true);
         const response = await fetch("http://localhost:8000/api/complaints");
         const data = await response.json();
-        setComplaints(data.slice(0, 5));
+        setComplaints(data);   // store ALL — stats derive from full set, table slices to 5
       } catch (error) {
         console.error("Failed to fetch complaints:", error);
         setComplaints([]);
@@ -156,6 +186,14 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
     };
 
     fetchComplaints();
+    // Auto-refresh every 30 seconds so dashboard stays in sync with new complaints
+    const interval = setInterval(fetchComplaints, 30000);
+    // Also refresh immediately when a new complaint is submitted in the same browser session
+    window.addEventListener("complaintSubmitted", fetchComplaints);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("complaintSubmitted", fetchComplaints);
+    };
   }, []);
 
 
@@ -262,12 +300,12 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
             </div>
 
             {activeView === "authority" ? (
-              <Link to="/complaint" className="btn btn-primary">
-                <span>🚨</span> Report Issue
+              <Link to="/triage" className="btn btn-primary">
+                <span>≡</span> View Triage Queue
               </Link>
             ) : (
-              <Link to="/investigate" className="btn btn-danger">
-                <span>🔍</span> Investigate Ward
+              <Link to="/complaint" className="btn btn-danger">
+                <span>🚨</span> Report an Issue
               </Link>
             )}
           </div>
@@ -406,7 +444,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
               </span>
             </div>
           </div>
-          <div style={{ flex: 1, overflow: "hidden" }}>
+          <div key={activeView} style={{ flex: 1, overflow: "hidden" }}>
             <HotspotMap />
           </div>
         </div>
@@ -531,8 +569,8 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
                       Loading real complaints data...
                     </td>
                   </tr>
-                ) : complaints.length > 0 ? (
-                  complaints.map((c) => {
+                ) : recentComplaints.length > 0 ? (
+                  recentComplaints.map((c) => {
                     const catStyle = getCategoryStyle(c.predicted_category || c.category || "Other");
                     const urgency = c.ai_urgency_score || c.urgency || 0;
                     const urgencyColor = getUrgencyColor(urgency);
@@ -582,22 +620,33 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView }) => {
                           {c.ward_name || c.ward || "N/A"}
                         </td>
                         <td>
-                          <span
-                            style={{
-                              background: "rgba(52,211,153,0.1)",
-                              color: "#34d399",
-                              padding: "0.2rem 0.6rem",
-                              borderRadius: "var(--radius-full)",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            Active
-                          </span>
+                          {(() => {
+                            const st = c.status || "open";
+                            const styleMap: Record<string, { bg: string; color: string; label: string }> = {
+                              open: { bg: "rgba(248,113,113,0.1)", color: "#f87171", label: "Open" },
+                              in_progress: { bg: "rgba(251,191,36,0.1)", color: "#fbbf24", label: "In Progress" },
+                              resolved: { bg: "rgba(52,211,153,0.1)", color: "#34d399", label: "Resolved" },
+                            };
+                            const s = styleMap[st] || styleMap["open"];
+                            return (
+                              <span
+                                style={{
+                                  background: s.bg,
+                                  color: s.color,
+                                  padding: "0.2rem 0.6rem",
+                                  borderRadius: "var(--radius-full)",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "600",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {s.label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td style={{ fontSize: "0.8rem", color: "var(--text-tertiary)", whiteSpace: "nowrap" }}>
-                          {c.filed_date ? new Date(c.filed_date).toLocaleDateString() : "N/A"}
+                          {c.filed_date ? new Date(c.filed_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "N/A"}
                         </td>
                       </tr>
                     );

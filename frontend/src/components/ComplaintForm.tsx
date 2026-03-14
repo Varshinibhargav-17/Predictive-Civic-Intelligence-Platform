@@ -73,10 +73,13 @@ const ComplaintForm: React.FC = (): React.JSX.Element => {
     try {
       await createComplaint({
         raw_text: description || "Reported via image capture.",
+        category: selectedCategory,
         ward_name: ward || "Unknown",
         latitude: 12.9716,
         longitude: 77.5946,
       });
+      // Notify dashboard to refresh immediately
+      window.dispatchEvent(new CustomEvent("complaintSubmitted"));
       setSuccess(true);
     } catch (err) {
       console.error("Failed to submit complaint:", err);
@@ -195,7 +198,7 @@ const ComplaintForm: React.FC = (): React.JSX.Element => {
                   <select
                     className="form-select"
                     value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCategory(e.target.value)}
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>{CATEGORY_ICONS[c]} {c}</option>
@@ -277,7 +280,7 @@ const ComplaintForm: React.FC = (): React.JSX.Element => {
                   id="ward-select"
                   className="form-select"
                   value={ward}
-                  onChange={(e) => setWard(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setWard(e.target.value)}
                 >
                   <option value="">Select ward...</option>
                   {WARDS.map((w) => <option key={w} value={w}>{w}</option>)}
@@ -290,7 +293,7 @@ const ComplaintForm: React.FC = (): React.JSX.Element => {
                   className="form-input"
                   placeholder="Near Silk Board junction..."
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
                 />
               </div>
             </div>
@@ -303,7 +306,7 @@ const ComplaintForm: React.FC = (): React.JSX.Element => {
                 rows={3}
                 placeholder="Add specific details about severity, how long it's been an issue, etc..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               />
             </div>
           </div>

@@ -25,23 +25,21 @@ def _ward_stats(db: Session, ward_name: str) -> dict:
         .first()
     )
     total = row.total or 0
-    avg_urgency = round(row.avg_urgency or 0, 1)
+    # Cast Decimal → float to avoid TypeError on arithmetic
+    avg_urgency = round(float(row.avg_urgency or 0), 1)
 
     # Normalise bias score 0–100 against all wards
-    all_avg = db.query(func.avg(ComplaintModel.urgency_score)).scalar() or 1
-    max_avg = (
-        db.query(func.max(ComplaintModel.urgency_score)).scalar() or 1
-    )
+    max_avg = float(db.query(func.max(ComplaintModel.urgency_score)).scalar() or 1)
     bias_score = round((avg_urgency / max_avg) * 100, 1) if max_avg else 0
 
     return {
-        "ward_name":          ward_name,
-        "total_complaints":   total,
+        "ward_name":           ward_name,
+        "total_complaints":    total,
         "avg_resolution_days": round(avg_urgency * 0.5, 1),
-        "bias_score":         bias_score,
-        "overdue":            round(total * 0.15),        # ~15% overdue estimate
-        "on_time_rate":       max(0, round(100 - bias_score)),
-        "fake_rate":          round(bias_score * 0.35, 1),
+        "bias_score":          bias_score,
+        "overdue":             round(total * 0.15),
+        "on_time_rate":        max(0, round(100 - bias_score)),
+        "fake_rate":           round(bias_score * 0.35, 1),
     }
 
 
@@ -52,7 +50,6 @@ def compare_wards(
     db: Session = Depends(get_db),
 ):
     """Compare two wards side-by-side using live DB data."""
-    # Get list of all distinct ward names for the dropdown
     wards_query = (
         db.query(ComplaintModel.ward_name)
         .filter(ComplaintModel.ward_name.isnot(None))
@@ -65,8 +62,8 @@ def compare_wards(
     stats_b = _ward_stats(db, ward_b)
 
     return {
-        "ward_a": stats_a,
-        "ward_b": stats_b,
+        "ward_a":    stats_a,
+        "ward_b":    stats_b,
         "all_wards": all_wards,
     }
 

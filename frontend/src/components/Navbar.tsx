@@ -17,17 +17,17 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
   }, []);
 
   const authorityLinks = [
-    { path: "/", label: "Dashboard", icon: "⬡" },
-    { path: "/complaint", label: "Report Issue", icon: "+" },
-    { path: "/triage", label: "Triage Queue", icon: "≡" },
-    { path: "/forecast", label: "Forecast", icon: "◈" },
+    { path: "/",         label: "Dashboard",     icon: "⬡" },
+    { path: "/triage",   label: "Triage Queue",  icon: "≡" },
+    { path: "/forecast", label: "Forecast",      icon: "◈" },
   ];
 
   const publicLinks = [
-    { path: "/", label: "Inequality Map", icon: "⬡" },
-    { path: "/bias", label: "Bias Scores", icon: "⚖" },
-    { path: "/compare", label: "Ward Compare", icon: "⇌" },
-    { path: "/investigate", label: "Investigate", icon: "🔍" },
+    { path: "/",           label: "Inequality Map",  icon: "⬡" },
+    { path: "/complaint",  label: "Report Issue",    icon: "+" },
+    { path: "/bias",       label: "Bias Scores",     icon: "⚖" },
+    { path: "/compare",    label: "Ward Compare",    icon: "⇌" },
+    { path: "/investigate",label: "Investigate",     icon: "🔍" },
   ];
 
   const links = activeView === "authority" ? authorityLinks : publicLinks;
@@ -188,13 +188,13 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                   transition: "all 0.2s ease",
                   textDecoration: "none",
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
                   if (!isActive) {
                     (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
                     (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
                   }
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
                   if (!isActive) {
                     (e.currentTarget as HTMLElement).style.background = "transparent";
                     (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
@@ -207,7 +207,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
           })}
         </div>
 
-        {/* Right side */}
+        {/* Right side: just the live indicator + view switch shortcut */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {/* Live indicator */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -228,16 +228,22 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
 
           <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.1)" }} />
 
-          <Link
-            to={activeView === "authority" ? "/login" : "/"}
+          {/* Switch view button (no auth needed) */}
+          <button
+            onClick={() => onViewChange(activeView === "authority" ? "public" : "authority")}
             className="btn btn-primary btn-sm"
+            style={{
+              background: activeView === "authority"
+                ? "linear-gradient(135deg, #f87171, #ec4899)"
+                : "linear-gradient(135deg, #3b82f6, #6366f1)",
+            }}
           >
             {activeView === "authority" ? (
-              <>🔑 Sign In</>
+              <>🌐 Citizen View</>
             ) : (
-              <>📊 Authority View</>
+              <>🏛 Authority View</>
             )}
-          </Link>
+          </button>
         </div>
       </div>
     </nav>

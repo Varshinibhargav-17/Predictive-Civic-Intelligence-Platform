@@ -3,8 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import ComplaintPage from "./pages/ComplaintPage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import TriagePage from "./pages/TriagePage";
 import ForecastPage from "./pages/ForecastPage";
 import BiasPage from "./pages/BiasPage";
@@ -28,8 +26,6 @@ const App: React.FC = (): React.JSX.Element => {
         >
           <Route index element={<Dashboard activeView={activeView} />} />
           <Route path="complaint" element={<ComplaintPage />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
           <Route path="triage" element={<TriagePage />} />
           <Route path="forecast" element={<ForecastPage />} />
           <Route path="bias" element={<BiasPage />} />

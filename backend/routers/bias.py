@@ -31,10 +31,11 @@ def _compute_bias_rows(db: Session):
     )
     if not rows:
         return []
-    max_urgency = max((r.avg_urgency or 0) for r in rows) or 1
+    max_urgency = max((float(r.avg_urgency or 0)) for r in rows) or 1
     result = []
     for r in rows:
-        bias_score = round(((r.avg_urgency or 0) / max_urgency) * 100, 1)
+        avg_urgency = float(r.avg_urgency or 0)
+        bias_score = round((avg_urgency / max_urgency) * 100, 1)
         result.append({
             "ward_name":           r.ward_name or "Unknown",
             "avg_resolution_days": round(bias_score * 0.5, 1),
