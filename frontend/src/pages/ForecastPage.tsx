@@ -117,89 +117,11 @@ const ForecastPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Ward-level SLA Tracker + Forecast */}
+            {/* Info Box */}
             <div
                 style={{
-                    background: "var(--bg-card)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "var(--radius-lg)",
-                    overflow: "hidden",
-                }}
-            >
-                <div
-                    style={{
-                        padding: "1.25rem 1.5rem",
-                        borderBottom: "1px solid var(--border-color)",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                    }}
-                >
-                    <div className="section-title">
-                        <div className="icon" style={{ background: "var(--success-light)", fontSize: "0.85rem" }}>⏱</div>
-                        SLA Compliance Tracker — Ward by Ward
-                    </div>
-                    <button className="btn btn-secondary btn-sm">📊 Full Report</button>
-                </div>
-
-                <div style={{ overflowX: "auto" }}>
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Ward</th>
-                                <th>Category</th>
-                                <th>On-Time %</th>
-                                <th>Overdue</th>
-                                <th>Avg Days</th>
-                                <th>7-Day Forecast</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {SLA_DATA.map((row, i) => {
-                                const slaColor = row.onTime >= 70 ? "#34d399" : row.onTime >= 50 ? "#fbbf24" : "#f87171";
-                                const forecastColor = row.predicted.startsWith("↑") ? "#f87171" : row.predicted.startsWith("↓") ? "#34d399" : "#94a3b8";
-                                return (
-                                    <tr key={i}>
-                                        <td style={{ fontWeight: "600" }}>{row.ward}</td>
-                                        <td style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>{row.category}</td>
-                                        <td>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                                <div style={{ flex: 1, height: "6px", background: "var(--bg-elevated)", borderRadius: "9999px", overflow: "hidden", minWidth: "60px" }}>
-                                                    <div style={{ width: `${row.onTime}%`, height: "100%", background: slaColor, borderRadius: "9999px" }} />
-                                                </div>
-                                                <span style={{ fontWeight: "700", color: slaColor, fontSize: "0.875rem", minWidth: "36px" }}>
-                                                    {row.onTime}%
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "0.2rem 0.6rem", borderRadius: "9999px", fontSize: "0.8rem", fontWeight: "600" }}>
-                                                {row.overdue}
-                                            </span>
-                                        </td>
-                                        <td style={{ color: "var(--text-secondary)" }}>{row.avgDays} days</td>
-                                        <td>
-                                            <span style={{ color: forecastColor, fontWeight: "600", fontSize: "0.85rem" }}>
-                                                {row.predicted}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button className="btn btn-ghost btn-sm">Deploy Team</button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Surge Prediction Alert */}
-            <div
-                style={{
-                    background: "rgba(248,113,113,0.05)",
-                    border: "1px solid rgba(248,113,113,0.2)",
+                    background: "rgba(99,102,241,0.05)",
+                    border: "1px solid rgba(99,102,241,0.2)",
                     borderRadius: "var(--radius-lg)",
                     padding: "1.5rem",
                     display: "flex",
@@ -207,20 +129,15 @@ const ForecastPage: React.FC = () => {
                     alignItems: "flex-start",
                 }}
             >
-                <div style={{ fontSize: "2rem" }}>⚡</div>
+                <div style={{ fontSize: "2rem" }}>💡</div>
                 <div>
-                    <div style={{ fontWeight: "700", color: "#f87171", fontSize: "1rem", marginBottom: "0.5rem" }}>
-                        Predicted Surge Alert — Bellandur + Marathahalli
+                    <div style={{ fontWeight: "700", color: var(--text-primary), fontSize: "1rem", marginBottom: "0.5rem" }}>
+                        7-Day Forecast — Powered by Prophet + LSTM
                     </div>
                     <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                        LSTM model detects <strong style={{ color: "var(--text-primary)" }}>heavy rainfall Thursday</strong> will trigger a{" "}
-                        <strong style={{ color: "#f87171" }}>+340% spike in drainage complaints</strong> by Friday across these two wards based on historical monsoon pattern matching.
-                        Recommend pre-deployment of 3 field teams to Bellandur and 2 to Marathahalli by Wednesday.
+                        The forecast above predicts complaint volume for the next 7 days across all wards and categories. Use the filters to focus on specific wards or complaint types. The model learns from historical patterns and external data like weather forecasts to predict surge periods.
                     </p>
                 </div>
-                <button className="btn btn-danger btn-sm" style={{ whiteSpace: "nowrap", marginTop: "0.25rem" }}>
-                    Deploy Alert
-                </button>
             </div>
         </div>
     );
